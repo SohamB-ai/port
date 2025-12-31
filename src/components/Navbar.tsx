@@ -1,92 +1,80 @@
 import { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Home, User, Code, FolderGit2, Briefcase, Mail } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const navLinks = [
-  { name: 'Home', href: '#home' },
-  { name: 'About', href: '#about' },
-  { name: 'Skills', href: '#skills' },
-  { name: 'Projects', href: '#projects' },
-  { name: 'Services', href: '#services' },
-  { name: 'Contact', href: '#contact' },
+  { name: 'Home', href: '#home', icon: Home },
+  { name: 'About', href: '#about', icon: User },
+  { name: 'Skills', href: '#skills', icon: Code },
+  { name: 'Projects', href: '#projects', icon: FolderGit2 },
+  { name: 'Services', href: '#services', icon: Briefcase },
+  { name: 'Contact', href: '#contact', icon: Mail },
 ];
 
 const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('Home');
 
+  // Update active section on scroll
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      const sections = navLinks.map(link => link.name);
+      
+      // Simple heuristic: check which section is closest to top or currently in view
+      // This is a basic implementation, can be refined with intersection observer
+      let current = '';
+      for (const section of sections) {
+        const element = document.getElementById(section.toLowerCase());
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 100 && rect.bottom >= 100) {
+            current = section;
+          }
+        }
+      }
+      if (current) setActiveSection(current);
     };
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleLinkClick = () => {
-    setIsMobileMenuOpen(false);
-  };
-
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-background/80 backdrop-blur-xl border-b border-border'
-          : 'bg-transparent'
-      }`}
-    >
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <a
-            href="#home"
-            className="text-2xl font-bold text-primary font-serif"
-          >
-            SB
-          </a>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-medium relative group font-sans"
-              >
-                {link.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
-              </a>
-            ))}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-foreground p-2"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden mt-4 py-4 border-t border-border">
-            <div className="flex flex-col gap-4">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  onClick={handleLinkClick}
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-base font-medium font-sans"
-                >
-                  {link.name}
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </nav>
+    <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
+      <motion.nav 
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="flex items-center gap-1 sm:gap-2 p-1.5 rounded-full bg-black/90 backdrop-blur-md border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]"
+      >
+        {navLinks.map((link) => {
+          const isActive = activeSection === link.name;
+          const Icon = link.icon;
+          
+          return (
+            <a
+              key={link.name}
+              href={link.href}
+              onClick={() => setActiveSection(link.name)}
+              className={`
+                relative px-4 py-2 rounded-full flex items-center gap-2 transition-all duration-300
+                ${isActive ? 'text-white' : 'text-gray-400 hover:text-white'}
+              `}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="active-pill"
+                  className="absolute inset-0 bg-purple-600/20 rounded-full border border-purple-500/50"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-2">
+                <Icon size={18} />
+                <span className="hidden sm:inline text-sm font-medium">{link.name}</span>
+              </span>
+            </a>
+          );
+        })}
+      </motion.nav>
+    </div>
   );
 };
 
